@@ -1,46 +1,68 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import api from '../../services/api'
 import './styles.css'
+import { Link } from 'react-router-dom';
 
 export  default class Main extends Component {
     state = {
-        product: []
+        products: [],
+        productInfo: {},
+        page: 1
+
     }
 
     componentDidMount() {
         this.loadProducts();
     }
 
-    loadProducts = async () => {
-        const response  = await api.get('/products');
+    loadProducts = async (page = 1) => {
+        const response  = await api.get(`/products?page=${page}`);
 
         const { docs, ...productInfo } = response.data;
 
-        this.setState({product: docs, productInfo});
+        this.setState({products: docs, productInfo, page});
     }
 
     prevPage = () => {
+        const { page } = this.state;
 
+        if (page === 1) return;
+
+        const pageNumber = page - 1;
+
+        this.loadProducts(pageNumber)
     }
-    nextPage = () => {
 
+    nextPage = () => {
+        const { page, productInfo } = this.state;
+
+        if (page === productInfo.pages) return;
+
+        const pageNumber = page + 1;
+
+        this.loadProducts(pageNumber)
     }
     render() {
-        const {product} = this.state
+        const {products, page, productInfo} = this.state
 
         return (
             <div className="product-list">
-                {product.map(prod => (
+                {products.map(prod => (
                     <article key={prod._id}>
                         <strong>{prod.title}</strong>
                         <p>{prod.description}</p>
 
-                        <a href="">Acessar</a>
+                        <Link to={`/products/${prod._id}`}>Acessar</Link>
                     </article>
                 ))}
                 <div className="actions">
-                    <button onClick={this.prevPage}>Anterior</button>
-                    <button onClick={this.nextPage}>Proximo</button>
+                    <button disabled={page === 1} onClick={this.prevPage}>
+                        Anterior
+                    </button>
+
+                    <button disabled={page === productInfo.pages} onClick={this.nextPage}>
+                        Proximo
+                    </button>
                 </div>
             </div>
         )
